@@ -3,6 +3,7 @@ import getpass
 import itertools
 import os
 import re
+import sys
 import time
 import urllib.parse
 import warnings
@@ -43,6 +44,7 @@ parser.add_argument('-c', '--cable-provider', nargs='?', default=None, choices=a
 parser.add_argument('-s', '--sport', required=True, choices=all_sports)
 parser.add_argument('-r', '--resolution', choices=[*resolution_constants.keys(), 'all'], default='1080p')
 parser.add_argument('-d', '--delay', nargs='?', default=10, help='Delay between clicking subsequent vod links')
+parser.add_argument('-f', '--filename', nargs='?', default=None, help='Filename to output links if desired')
 args = parser.parse_args()
 
 
@@ -207,7 +209,14 @@ def process_vod(link):
     title = driver.find_element_by_class_name('side-bar-content-info-title').text.replace(':', ' -')
 
     for res, link in m3u8_links.items():
-        print(f'youtube-dl -f best "{link}" --hls-prefer-native -o "{title} [{res}].mp4"')
+        dl_str = f'youtube-dl -f best "{link}" --hls-prefer-native -o "{title} [{res}].mp4"\n'
+
+        # write each time in case of crash not to lose entire progress
+        if args.filename is not None:
+            with open(args.filename, 'a') as fi:
+                fi.write(dl_str)
+        else:
+            sys.stdout.write(dl_str)
 
     time.sleep(args.delay)
 
