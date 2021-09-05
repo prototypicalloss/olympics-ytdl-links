@@ -61,6 +61,7 @@ caps['goog:loggingPrefs'] = {'performance': 'ALL'}
 
 chrome_option = webdriver.ChromeOptions()
 chrome_option.add_argument('--remote-debugging-port=9222')
+chrome_option.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.84 Safari/537.36')
 
 
 driver = webdriver.Chrome(
