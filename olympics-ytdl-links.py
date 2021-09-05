@@ -49,7 +49,7 @@ args = parser.parse_args()
 
 
 if args.resolution == '1080p' and args.cable_provider is None:
-    warnings.warn('1080p streams will not be available without cable provider log-in')
+    warnings.warn('1080p streams may not be available without cable provider log-in')
 
 base_url = 'https://www.nbcolympics.com/replays/sport/'
 m3u8_regex = r'https://sprt.*?VIDEO_\d_\d+?_vod\.m3u8'
@@ -69,8 +69,9 @@ driver = webdriver.Chrome(
     executable_path=os.path.abspath('chromedriver')
 )
 
-cable_username = args.username or getpass.getpass(prompt=f'{args.cable_provider} username: ')
-cable_password = args.password or getpass.getpass(prompt=f'{args.cable_provider} password: ')
+if args.cable_provider:
+    cable_username = args.username or getpass.getpass(prompt=f'{args.cable_provider} username: ')
+    cable_password = args.password or getpass.getpass(prompt=f'{args.cable_provider} password: ')
 
 driver.get(f'{base_url}{args.sport}')
 
