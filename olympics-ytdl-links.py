@@ -37,6 +37,11 @@ resolution_constants = {
     '720p': '4596000'
 }
 
+file_formats = [
+    'bash_commands',
+    'bash_array'
+]
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--username', nargs='?', default=None)
 parser.add_argument('-p', '--password', nargs='?', default=None)
@@ -45,6 +50,7 @@ parser.add_argument('-s', '--sport', required=True, choices=all_sports)
 parser.add_argument('-r', '--resolution', choices=[*resolution_constants.keys(), 'all'], default='1080p')
 parser.add_argument('-d', '--delay', nargs='?', default=5, help='Delay between clicking subsequent vod links')
 parser.add_argument('-f', '--filename', nargs='?', default=None, help='Filename to output links if desired')
+parser.add_argument('-t', '--file-format', nargs='?', default='bash_commands', choices=file_formats)
 args = parser.parse_args()
 
 
@@ -97,6 +103,14 @@ vod_links = [
     elem.get_attribute('href')
     for elem in driver.find_elements_by_class_name('post-card__link')
 ]
+
+
+def write_output(s):
+    if args.filename is not None:
+        with open(args.filename, 'a') as fi:
+            fi.write(s)
+    else:
+        sys.stdout.write(s)
 
 
 def process_vod(link):
@@ -215,19 +229,30 @@ def process_vod(link):
     title = driver.find_element_by_class_name('side-bar-content-info-title').text.replace(':', ' -')
 
     for res, link in m3u8_links.items():
-        dl_str = f'youtube-dl -f best "{link}" --hls-prefer-native -o "{title} [{res}].mp4"\n'
+        vod_filename = f'{title} [{res}].mp4'
+
+        if args.file_format == 'bash_array':
+            dl_str = f'\t["{link}"]="{vod_filename}"\n'
+        elif args.file_format == 'bash_commands':
+            dl_str = f'youtube-dl -f best "{link}" --hls-prefer-native -o "{vod_filename}"\n'
+        else:
+            # should be caught by arg parser
+            raise ValueError('Invalid file_format')
 
         # write each time in case of crash not to lose entire progress
-        if args.filename is not None:
-            with open(args.filename, 'a') as fi:
-                fi.write(dl_str)
-        else:
-            sys.stdout.write(dl_str)
+        write_output(dl_str)
 
     time.sleep(args.delay)
 
 
+if args.file_format == 'bash_array':
+    write_output('declare -A pairs=(\n')
+
 for v in vod_links:
     process_vod(v)
+
+if args.file_format == 'bash_array':
+    write_output(')\n')
+
 
 driver.quit()
