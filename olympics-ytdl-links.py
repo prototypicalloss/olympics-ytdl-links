@@ -43,7 +43,7 @@ parser.add_argument('-p', '--password', nargs='?', default=None)
 parser.add_argument('-c', '--cable-provider', nargs='?', default=None, choices=all_cable_providers)
 parser.add_argument('-s', '--sport', required=True, choices=all_sports)
 parser.add_argument('-r', '--resolution', choices=[*resolution_constants.keys(), 'all'], default='1080p')
-parser.add_argument('-d', '--delay', nargs='?', default=10, help='Delay between clicking subsequent vod links')
+parser.add_argument('-d', '--delay', nargs='?', default=5, help='Delay between clicking subsequent vod links')
 parser.add_argument('-f', '--filename', nargs='?', default=None, help='Filename to output links if desired')
 args = parser.parse_args()
 
@@ -75,7 +75,7 @@ if args.cable_provider:
 
 driver.get(f'{base_url}{args.sport}')
 
-WebDriverWait(driver, 10).until(
+WebDriverWait(driver, 5).until(
     expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, '.post-card__link')),
 )
 
@@ -115,7 +115,7 @@ def process_vod(link):
 
         # assume timeout means direct to login page
         try:
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 5).until(
                 expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, '.temp-pass-mobile-login')),
             )
         except TimeoutException:
@@ -129,7 +129,7 @@ def process_vod(link):
             login_button.click()
 
         try:
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 5).until(
                 expected_conditions.element_to_be_clickable((By.ID, 'access-enabler-provider-search'))
             )
         except TimeoutException:
@@ -146,7 +146,7 @@ def process_vod(link):
             except KeyError:
                 raise ValueError(f'Provider {args.cable_provider} not available')
 
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 5).until(
                 expected_conditions.element_to_be_clickable((By.XPATH, "//button[@type='submit']"))
             )
 
@@ -171,7 +171,7 @@ def process_vod(link):
         while not login_success:
             do_login()
             try:
-                WebDriverWait(driver, 10).until(
+                WebDriverWait(driver, 5).until(
                     expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, '.click-to-play-button'))
                 )
             except TimeoutException:
@@ -183,6 +183,10 @@ def process_vod(link):
                 time.sleep(1)
             else:
                 login_success = True
+    else:
+        WebDriverWait(driver, 5).until(
+            expected_conditions.element_to_be_clickable((By.CSS_SELECTOR, '.click-to-play-button'))
+        )
 
     play_button = driver.find_element_by_class_name('click-to-play-button')
     play_button.click()
